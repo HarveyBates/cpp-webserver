@@ -8,34 +8,34 @@ Connection::Connection(asio::io_context& io_context) :
 
 Connection::~Connection(){
 	std::error_code ec;
-	socket_.shutdown(asio::ip::tcp::socket::shudown_both, ec);
+	socket_.shutdown(asio::ip::tcp::socket::shutdown_both, ec);
 	socket_.close();
 }
 
 
-//asio::ip::tcp::socket& Connection::socket(){
-//	return socket_;
-//}
+asio::ip::tcp::socket& Connection::socket(){
+	return socket_;
+}
 
 
-//void Connection::start(){
-//	do_read();
-//}
+void Connection::start(){
+	do_read();
+}
 
 
 void Connection::xor_decrypt(char* buffer){
 	char outBuffer[64000]; // is this needed?
 
-	std::fill(outBuffer, 64000, 0); // Is this needed?
+	std::fill_n(outBuffer, 64000, 0); // Is this needed?
 
 	unsigned int packetLength = 0;
 	char mask[4];
 
-	if(buffer[0] == 0x81){
+	if((unsigned char)buffer[0] == 0x81){
 		packetLength = buffer[1] & 0x7f;
 
 		if(packetLength == 126){
-			payloadLength = (buffer[2] << 8 & 0xFF) + 
+			unsigned int payloadLength = (buffer[2] << 8 & 0xFF) + 
 				(buffer[3] & 0x00);
 
 			mask[0] = buffer[4];
@@ -119,17 +119,17 @@ void Connection::do_write(){
 			"Sec-WebSocket-Accept: " + sha1Key + "\r\n\r\n";
 	}
 	else{
-		response = Simple::Crypto::Base64::decode(buffer);
+		response = SimpleWeb::Crypto::Base64::decode(buffer);
 	}
 
 	asio::async_write(socket_, asio::buffer(response.c_str(), 
 				response.size()), [this, self](std::error_code err,
-				size_t length)){
+				size_t length){
 		if(!err){
 			do_read();
 		}
 		// TODO What if there is an error
-	}
+	});
 }
 
 

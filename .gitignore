@@ -1,0 +1,18 @@
+# User defined
+.DS_Store
+*.swp
+*.*.swp
+
+# Build folder
+bin
+
+# CMake generated directories
+_deps
+cmake
+CMakeFiles
+CPM_modules
+
+# CMake generated files
+*.cmake
+CMakeCache.txt
+Makefile

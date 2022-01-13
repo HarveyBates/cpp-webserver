@@ -4,11 +4,12 @@
 #include <iostream>
 
 #include <asio.hpp>
-#include <asio/ts/buffer.h>
-#include <asio/ts/internet.h>
+#include <asio/ts/buffer.hpp>
+#include <asio/ts/internet.hpp>
 
 #include "connection.hpp"
 
+const unsigned int kPort = 443;
 
 class Server {
 	public:
@@ -16,14 +17,13 @@ class Server {
 		~Server();
 
 	private:
-		constexpr unsigned int kPort = 443;
 		asio::io_context& io_context_;
-		asio::ip::tcp::accpetor acceptor_;
+		asio::ip::tcp::acceptor acceptor_;
 
 		void start_accept();
 		void handle_accept(Connection::pointer new_connection, 
 				const asio::error_code& error);
-}
+};
 
 
 #endif // SERVER_H_
