@@ -31,7 +31,7 @@ set(NAME_HEADERS
 	include/connection.hpp
 	include/crypto.hpp)
 
-set(EXE_OUTPUT_PATH
+set(EXECUTABLE_OUTPUT_PATH
 	${CMAKE_BINARY_DIR}/bin)
 
 # Threads

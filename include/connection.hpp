@@ -14,27 +14,35 @@
 
 class Connection : public std::enable_shared_from_this<Connection>{
 	public:
-		typedef std::shared_ptr<Connection> pointer;
-
-		static pointer create(asio::io_context& io_context);
-		asio::ip::tcp::socket& socket();
-		void start();
-
-	private:
-		char buffer[64000];
-		bool handshake = false;
-		asio::ip::tcp::socket socket_;
-
-		inline static const std::string kWsMagicString = 
-			"258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-		inline static const std::size_t kBufferLength = 4096;
+		typedef std::shared_ptr<Connection> client;
 
 		Connection(asio::io_context& io_context);
 		~Connection();
 
+		inline static client create(asio::io_context& io_context) {
+			return client(new Connection(io_context));
+		}
+
+		inline asio::ip::tcp::socket& socket() {
+			return socket_;
+		}
+
+		void start();
+
+	private:
+
+		static const std::size_t kBufferSize = 4096;
+
+		char buffer[kBufferSize];
+
+		const std::string kWsMagicString = 
+			"258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+
+		bool handshake = false;
+		asio::ip::tcp::socket socket_;
+
 		void handle_write(const asio::error_code& error, 
 				size_t bytesTransfer);
-		void do_read();
 		void do_write();
 		void xor_decrypt(char* buffer);
 };

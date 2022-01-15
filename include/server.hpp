@@ -21,7 +21,7 @@ class Server {
 		asio::ip::tcp::acceptor acceptor_;
 
 		void start_accept();
-		void handle_accept(Connection::pointer new_connection, 
+		void handle_accept(Connection::client newConnection, 
 				const asio::error_code& error);
 };
 

@@ -13,14 +13,14 @@ Server::~Server(){
 
 
 void Server::start_accept(){
-	Connection::pointer newConnection = Connection::create(io_context_);
+	Connection::client newConnection = Connection::create(io_context_);
 	acceptor_.async_accept(newConnection->socket(), 
 			std::bind(&Server::handle_accept, this, newConnection,
 				std::placeholders::_1));
 }
 
 
-void Server::handle_accept(Connection::pointer newConnection,
+void Server::handle_accept(Connection::client newConnection,
 		const asio::error_code& err){
 	if(!err){
 		newConnection->start();

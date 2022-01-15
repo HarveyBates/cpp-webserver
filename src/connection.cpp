@@ -1,5 +1,6 @@
 #include "connection.hpp"
 
+
 Connection::Connection(asio::io_context& io_context) : 
 	socket_(io_context){
 
@@ -13,23 +14,13 @@ Connection::~Connection(){
 }
 
 
-asio::ip::tcp::socket& Connection::socket(){
-	return socket_;
-}
-
-
-void Connection::start(){
-	do_read();
-}
-
-
 void Connection::xor_decrypt(char* buffer){
-	char outBuffer[64000]; // is this needed?
-
-	std::fill_n(outBuffer, 64000, 0); // Is this needed?
+	char outBuffer[kBufferSize];
 
 	unsigned int packetLength = 0;
 	char mask[4];
+
+	std::fill_n(outBuffer, kBufferSize, 0); // This is gross
 
 	if((unsigned char)buffer[0] == 0x81){
 		packetLength = buffer[1] & 0x7f;
@@ -49,30 +40,31 @@ void Connection::xor_decrypt(char* buffer){
 				outBuffer[i] = buffer[pos] ^ mask[i % 4];
 			}
 		}
-	}
-	else{
-		mask[0] = buffer[2];
-		mask[1] = buffer[3];
-		mask[2] = buffer[4];
-		mask[3] = buffer[5];
+		else{
+			mask[0] = buffer[2];
+			mask[1] = buffer[3];
+			mask[2] = buffer[4];
+			mask[3] = buffer[5];
 
-		int offset = 6;
-		for(int i = 0; i < packetLength; i++){
-			int pos = offset + i;
-			outBuffer[i] = buffer[pos] ^ mask[i % 4];
+			int offset = 6;
+			for(int i = 0; i < packetLength; i++){
+				int pos = offset + i;
+				outBuffer[i] = buffer[pos] ^ mask[i % 4];
+			}
 		}
 	}
 
-	std::cout << "[Command]:"<< outBuffer << std::endl;
+	std::cout << "> " << outBuffer << std::endl;
 }
 
 
-void Connection::do_read(){
+void Connection::start(){
+	// Equivilent to do_read()
 	auto self(shared_from_this());
 
-	std::fill_n(buffer, 64000, 0);
+	std::fill_n(buffer, kBufferSize, 0); // This is gross
 
-	socket_.async_read_some(asio::buffer(buffer, 64000), 
+	socket_.async_read_some(asio::buffer(buffer, kBufferSize), 
 			[this, self](std::error_code err, size_t length){
 		
 		if(asio::error::eof == err || 
@@ -110,7 +102,9 @@ void Connection::do_write(){
 				strlen("Sec-WebSocket-Key: "));
 		auto key = tmp.substr(0, tmp.find("\r\n"));
 
-		auto sha1Key = SimpleWeb::Crypto::sha1(key + kWsMagicString);
+		auto sha1Key = Crypto::sha1(key + kWsMagicString);
+
+		sha1Key = Crypto::Base64::encode(sha1Key);
 
 		response = 
 			"HTTP/1.1 101 Switching Protocols\r\n"
@@ -119,14 +113,14 @@ void Connection::do_write(){
 			"Sec-WebSocket-Accept: " + sha1Key + "\r\n\r\n";
 	}
 	else{
-		response = SimpleWeb::Crypto::Base64::decode(buffer);
+		response = Crypto::Base64::decode(buffer);
 	}
 
 	asio::async_write(socket_, asio::buffer(response.c_str(), 
 				response.size()), [this, self](std::error_code err,
 				size_t length){
 		if(!err){
-			do_read();
+			start();
 		}
 		// TODO What if there is an error
 	});
