@@ -20,7 +20,7 @@ void Connection::xor_decrypt(char* buffer){
 	unsigned int packetLength = 0;
 	char mask[4];
 
-	std::fill_n(outBuffer, kBufferSize, 0); // This is gross
+	std::fill_n(outBuffer, kBufferSize, 0);
 
 	if((unsigned char)buffer[0] == 0x81){
 		packetLength = buffer[1] & 0x7f;
@@ -58,17 +58,15 @@ void Connection::xor_decrypt(char* buffer){
 }
 
 
-void Connection::start(){
-	// Equivilent to do_read()
+void Connection::do_read(){
 	auto self(shared_from_this());
 
-	std::fill_n(buffer, kBufferSize, 0); // This is gross
+	std::fill_n(buffer, kBufferSize, 0);
 
 	socket_.async_read_some(asio::buffer(buffer, kBufferSize), 
 			[this, self](std::error_code err, size_t length){
 		
-		if(asio::error::eof == err || 
-				asio::error::connection_reset == err){
+		if(asio::error::eof == err || asio::error::connection_reset == err){
 			std::cout << 
 				"[Connection]: Client has disconnected." 
 			<< std::endl;
@@ -80,9 +78,7 @@ void Connection::start(){
 				xor_decrypt(buffer);
 			}
 			else{
-				std::cout << 
-					"[Connection]: Handshake."
-				<< std::endl;
+				std::cout << "[Connection]: Handshake." << std::endl;
 				handshake = true;
 			}
 
@@ -119,10 +115,12 @@ void Connection::do_write(){
 	asio::async_write(socket_, asio::buffer(response.c_str(), 
 				response.size()), [this, self](std::error_code err,
 				size_t length){
-		if(!err){
-			start();
+		if(asio::error::eof == err || asio::error::connection_reset == err){
+			std::cout <<  "[Connection]: Write error." << err << std::endl;
 		}
-		// TODO What if there is an error
+		else{
+			do_read();
+		}
 	});
 }
 

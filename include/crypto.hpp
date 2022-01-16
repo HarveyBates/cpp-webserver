@@ -1,5 +1,6 @@
 /* Modified from https://gitlab.com/eidheim/Simple-WebSocket-Server
 * Original author: Ole Christian Eidheim
+* Modified by: Harvey Bates
 * Purpose: Easy way to decode, encode and decrypt Websocket messages
 */
 

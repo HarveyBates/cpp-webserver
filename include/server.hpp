@@ -20,9 +20,10 @@ class Server {
 		asio::io_context& io_context_;
 		asio::ip::tcp::acceptor acceptor_;
 
-		void start_accept();
 		void handle_accept(Connection::client newConnection, 
 				const asio::error_code& error);
+
+		void new_client();
 };
 
 

@@ -27,11 +27,11 @@ class Connection : public std::enable_shared_from_this<Connection>{
 			return socket_;
 		}
 
-		void start();
+		void do_read();
 
 	private:
 
-		static const std::size_t kBufferSize = 4096;
+		static constexpr std::size_t kBufferSize = 4096;
 
 		char buffer[kBufferSize];
 
@@ -39,11 +39,11 @@ class Connection : public std::enable_shared_from_this<Connection>{
 			"258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
 		bool handshake = false;
+
 		asio::ip::tcp::socket socket_;
 
-		void handle_write(const asio::error_code& error, 
-				size_t bytesTransfer);
 		void do_write();
+
 		void xor_decrypt(char* buffer);
 };
 
